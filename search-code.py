@@ -16,36 +16,72 @@ def sort_val(some_dict):
 	val_x, val_y = zip(*sorted_val)
 	return val_x, val_y
 
+def search_letters(in_words, letter, operation):
+	out_words = []
+	if operation == "add":
+		for word in in_words:
+			if word.count(letter) > 0:
+				out_words.append(word)
+	elif operation == "sub":
+		for word in in_words:
+			if word.count(letter) == 0:
+				out_words.append(word)
+	else:
+		print("invalid operation type")
+		pass
+	return out_words
+
+def plot_word_frequency(in_words, in_string):
+	### Concatinate words into one string
+	letters = ''
+	for word in in_words:
+		letters += word
+	### Get frequency of letters
+	letters_dict = Counter(letters)
+	### Sort and separate letters and values
+	letter_alph, value_alph = sort_alph(letters_dict)
+	letter_val, value_val = sort_val(letters_dict)
+	### Plot frequency of letters
+	# Alphabetically
+	plt.bar(letter_alph, value_alph)
+	plt.title("Frequency of letters in possible Wordle answers\nAlphabetically sorted")
+	plt.savefig("/home/tess/Documents/Wordle/letter_freq_"+in_string+"_alph.png")
+	plt.clf()
+	# Numerically
+	plt.bar(letter_val, value_val)
+	plt.title("Frequency of letters in possible Wordle answers\nNumerically sorted")
+	plt.savefig("/home/tess/Documents/Wordle/letter_freq_"+in_string+"_val.png")
+	plt.clf()
+
+def pop_known(in_words, in_letters):
+	letters = ''
+	for word in in_words:
+		letters += word
+	out_letters = "".join(c for c in letters if c.lower() not in in_letters)
+	return out_letters
+
 ### Read words from file
 with open("/home/tess/Documents/Wordle/eligible-words.txt", "r") as f:
 	words = f.read().splitlines()
 
-### Contatinate words into one string
-letters = ''
-for word in words:
-	letters += word
+plot_word_frequency(words, "+00")
 
-### Get frequency of letters
-letters_dict = Counter(letters)
+### After some guesses
 
-### Sort and separate letters and values
-letter_alph, value_alph = sort_alph(letters_dict)
-letter_val, value_val = sort_val(letters_dict)
+include_letters = "uor"
+eliminate_letters = "adiesnt"
 
-### Plot frequency of letters
+new_words = words
+if include_letters != "":
+	for letter in include_letters:
+		new_words = search_letters(new_words, letter, "add")
 
-# Alphabetically
-plt.bar(letter_alph, value_alph)
-plt.title("Frequency of letters in possible Wordle answers\nAlphabetically sorted")
-plt.savefig("/home/tess/Documents/Wordle/letter-freq-alph.png")
-plt.clf()
+if eliminate_letters != "":
+	for not_letter in eliminate_letters:
+		new_words = search_letters(new_words, not_letter, "sub")
 
-# Numerically
-plt.bar(letter_val, value_val)
-plt.title("Frequency of letters in possible Wordle answers\nNumerically sorted")
-plt.savefig("/home/tess/Documents/Wordle/letter-freq-val.png")
-plt.clf()
+print(new_words)
 
-### TO DO: Make list of letter frequencies given one or many letters are either present o not present
+unknown_letters = pop_known(new_words, include_letters)
 
-
+plot_word_frequency(unknown_letters, "+"+include_letters+"-"+eliminate_letters)
